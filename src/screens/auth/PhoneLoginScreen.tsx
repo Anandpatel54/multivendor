@@ -17,7 +17,7 @@ import {
 } from 'react-native';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {useAppDispatch, useAppSelector} from '../../store/hooks';
-import {requestOtp} from '../../features/auth/authSlice';
+import {requestOtp, setRole} from '../../features/auth/authSlice';
 
 type RootStackParamList = {
   PhoneLogin: undefined;
@@ -29,7 +29,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'PhoneLogin'>;
 
 export function PhoneLoginScreen({navigation}: Props) {
   const dispatch = useAppDispatch();
-  const {authLoading} = useAppSelector(state => state.auth);
+  const {authLoading, selectedRole} = useAppSelector(state => state.auth);
   const [mobile, setMobile] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
@@ -75,7 +75,9 @@ export function PhoneLoginScreen({navigation}: Props) {
       return;
     }
 
-    const result = await dispatch(requestOtp({mobile: mobile.trim()}));
+    const result = await dispatch(
+      requestOtp({mobile: mobile.trim(), role: selectedRole}),
+    );
 
     if (requestOtp.fulfilled.match(result)) {
       navigation.navigate('Otp');
@@ -100,6 +102,19 @@ export function PhoneLoginScreen({navigation}: Props) {
       return styles.buttonActive;
     }
     return styles.buttonDisabled;
+  };
+
+  const openRoleSelector = () => {
+    Alert.alert('Select Role', 'Choose how you want to continue', [
+      {
+        text: 'User',
+        onPress: () => dispatch(setRole('user')),
+      },
+      {
+        text: 'Vendor',
+        onPress: () => dispatch(setRole('vendor')),
+      },
+    ], {cancelable: true});
   };
 
   return (
@@ -187,6 +202,22 @@ export function PhoneLoginScreen({navigation}: Props) {
                 <Text style={styles.helperText}>
                   We'll send you a 6-digit verification code
                 </Text>
+              </View>
+
+              <View style={styles.roleSection}>
+                <Text style={styles.roleLabel}>Selected Role</Text>
+                <Pressable
+                  style={({pressed}) => [
+                    styles.roleSelector,
+                    pressed && styles.roleSelectorPressed,
+                  ]}
+                  onPress={openRoleSelector}
+                  disabled={authLoading}>
+                  <Text style={styles.roleValue}>
+                    {selectedRole === 'vendor' ? 'Vendor' : 'User'}
+                  </Text>
+                  <Text style={styles.roleArrow}>▾</Text>
+                </Pressable>
               </View>
             </View>
 
@@ -464,6 +495,46 @@ const styles = StyleSheet.create({
   helperText: {
     fontSize: 12,
     color: '#a0aec0',
+  },
+  roleSection: {
+    marginTop: 18,
+  },
+  roleLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#4a5568',
+    marginBottom: 8,
+    paddingHorizontal: 4,
+    letterSpacing: 0.3,
+  },
+  roleSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: '#e2e8f0',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 3},
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  roleSelectorPressed: {
+    transform: [{scale: 0.99}],
+  },
+  roleValue: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#2d3748',
+  },
+  roleArrow: {
+    fontSize: 14,
+    color: '#718096',
+    fontWeight: '700',
   },
 
   // Button Section

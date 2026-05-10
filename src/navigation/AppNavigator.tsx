@@ -132,6 +132,14 @@ function VendorDrawerNavigator() {
           headerTitle: 'Add Services',
         }}
       />
+      <VendorDrawer.Screen
+        name="Add Vendor"
+        component={VendorAddServicesScreen}
+        options={{
+          drawerIcon: renderDrawerIcon('storefront'),
+          headerTitle: 'Add Vendor',
+        }}
+      />
     </VendorDrawer.Navigator>
   );
 }

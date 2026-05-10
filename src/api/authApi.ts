@@ -2,6 +2,7 @@ import {httpClient} from './httpClient';
 
 export type RequestOtpRequest = {
   mobile: string;
+  role: 'user' | 'vendor';
 };
 
 export type RequestOtpResponse = {

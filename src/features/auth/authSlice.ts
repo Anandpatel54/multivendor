@@ -55,6 +55,7 @@ function resolveOrCreateUser(state: AuthState, payload: {uid: string; role: Role
 
 type RequestOtpPayload = {
   mobile: string;
+  role: Role;
 };
 
 type VerifyOtpResponse = {
@@ -68,9 +69,9 @@ type VerifyOtpResponse = {
 
 export const requestOtp = createAsyncThunk<RequestOtpResponse, RequestOtpPayload, {rejectValue: string}>(
   'auth/requestOtp',
-  async ({mobile}, {rejectWithValue}) => {
+  async ({mobile, role}, {rejectWithValue}) => {
     try {
-      return await requestOtpApi({mobile});
+      return await requestOtpApi({mobile, role});
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to send OTP';
       return rejectWithValue(message);
