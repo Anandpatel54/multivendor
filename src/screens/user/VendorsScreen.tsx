@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   Alert,
   FlatList,
@@ -10,12 +10,76 @@ import {
 } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {useAppSelector} from '../../store/hooks';
+import {httpClient} from '../../api/httpClient';
+
+type VendorSlotsApiResponse = {
+  vendor: {
+    mobile: string;
+    name: string;
+    businessName: string;
+    location: string;
+    specialty: string;
+    services: string[];
+    timeSlots: string[];
+  };
+};
+
+type VendorCardData = {
+  id: string;
+  businessName: string;
+  location: string;
+  category: string;
+  services: string[];
+  availableSlots: string[];
+};
 
 export function VendorsScreen() {
   const navigation = useNavigation<any>();
-  const vendors = useAppSelector(state => state.vendors);
   const userId = useAppSelector(state => state.auth.currentUser?.id);
+  const authToken = useAppSelector(state => state.auth.authToken);
+  const [vendors, setVendors] = useState<VendorCardData[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [selectedSlots, setSelectedSlots] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    const fetchVendorSlots = async () => {
+      setIsLoading(true);
+      try {
+        if (!authToken) {
+          Alert.alert('Unauthorized', 'Token missing. Please login again.');
+          setVendors([]);
+          setIsLoading(false);
+          return;
+        }
+
+        const {data} = await httpClient.get<VendorSlotsApiResponse>(
+          '/users/vendors/7000686128/slots',
+          {
+            headers: {
+              Authorization: `Bearer ${authToken}`,
+            },
+          },
+        );
+        const apiVendor = data.vendor;
+        const mappedVendor: VendorCardData = {
+          id: apiVendor.mobile,
+          businessName: apiVendor.businessName?.trim() || apiVendor.name || 'Vendor',
+          location: apiVendor.location || 'N/A',
+          category: apiVendor.specialty?.trim() || 'Services',
+          services: apiVendor.services ?? [],
+          availableSlots: apiVendor.timeSlots ?? [],
+        };
+        setVendors([mappedVendor]);
+      } catch (error) {
+        console.log('Fetch vendor slots error:', error);
+        Alert.alert('Error', 'Unable to fetch vendor slots right now.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchVendorSlots();
+  }, [authToken]);
 
   const handleSelectSlot = (vendorId: string, slot: string) => {
     setSelectedSlots(prev => ({...prev, [vendorId]: slot}));
@@ -52,6 +116,11 @@ export function VendorsScreen() {
         keyExtractor={item => item.id}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
+        ListEmptyComponent={
+          <Text style={styles.noSlots}>
+            {isLoading ? 'Loading vendors...' : 'No vendors available right now'}
+          </Text>
+        }
         renderItem={({item}) => {
           const selectedSlot = selectedSlots[item.id];
 
@@ -93,6 +162,13 @@ export function VendorsScreen() {
                   <Text style={styles.noSlots}>No slots available for today</Text>
                 )}
               </View>
+
+              {item.services.length > 0 ? (
+                <>
+                  <Text style={styles.sectionTitle}>Services</Text>
+                  <Text style={styles.servicesText}>{item.services.join(', ')}</Text>
+                </>
+              ) : null}
 
               {selectedSlot ? (
                 <Pressable
@@ -213,6 +289,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#94A3B8',
     fontStyle: 'italic',
+  },
+  servicesText: {
+    marginTop: 2,
+    color: '#334155',
+    fontWeight: '500',
   },
   bookNowBtn: {
     marginTop: 14,

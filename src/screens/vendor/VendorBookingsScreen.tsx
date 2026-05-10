@@ -5,7 +5,6 @@ import {
   handleRescheduleRequest,
   updateAppointmentStatus,
 } from '../../features/appointments/appointmentsSlice';
-import {logout} from '../../features/auth/authSlice';
 
 export function VendorBookingsScreen() {
   const dispatch = useAppDispatch();
@@ -17,16 +16,10 @@ export function VendorBookingsScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>View Bookings</Text>
-        <Pressable onPress={() => dispatch(logout())}>
-          <Text style={styles.logout}>Logout</Text>
-        </Pressable>
-      </View>
       <FlatList
         data={appointments}
         keyExtractor={item => item.id}
-        contentContainerStyle={{padding: 12}}
+        contentContainerStyle={{padding: 12, paddingTop: 8}}
         ListEmptyComponent={<Text style={styles.empty}>No bookings yet</Text>}
         renderItem={({item}) => {
           const user = users.find(u => u.id === item.userId);
@@ -108,15 +101,6 @@ function ActionBtn({label, onPress}: {label: string; onPress: () => void}) {
 
 const styles = StyleSheet.create({
   container: {flex: 1, backgroundColor: '#f6f9fc'},
-  header: {
-    paddingHorizontal: 16,
-    paddingTop: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  title: {fontSize: 22, fontWeight: '700', color: '#102a43'},
-  logout: {color: '#0d6efd', fontWeight: '700'},
   card: {
     backgroundColor: '#fff',
     borderWidth: 1,

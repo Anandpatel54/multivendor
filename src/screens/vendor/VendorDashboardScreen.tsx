@@ -9,7 +9,6 @@ export function VendorDashboardScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>Dashboard Reports</Text>
       <View style={styles.row}>
         <StatCard label="Total Bookings" value={stats.total} />
         <StatCard label="Pending" value={stats.pending} />

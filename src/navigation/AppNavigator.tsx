@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import {Text, View} from 'react-native';
-import {NavigationContainer} from '@react-navigation/native';
+import {NavigationContainer, getFocusedRouteNameFromRoute} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {
@@ -20,6 +20,7 @@ import {SplashScreen} from '../screens/SplashScreen';
 import {UserAppointmentsScreen} from '../screens/user/UserAppointmentsScreen';
 import {BookingAddressScreen} from '../screens/user/BookingAddressScreen';
 import {VendorBookingsScreen} from '../screens/vendor/VendorBookingsScreen';
+import {VendorAddServicesScreen} from '../screens/vendor/VendorAddServicesScreen';
 import {logout} from '../features/auth/authSlice';
 
 type RootStackParamList = {
@@ -36,6 +37,7 @@ type RootStackParamList = {
 const RootStack = createNativeStackNavigator<RootStackParamList>();
 const MainTab = createBottomTabNavigator();
 const VendorDrawer = createDrawerNavigator();
+const VendorTab = createBottomTabNavigator();
 
 type TabIconProps = {
   color: string;
@@ -56,6 +58,28 @@ function renderAppointmentsTabIcon({color, size}: TabIconProps) {
 
 function renderDrawerIcon(name: string) {
   return ({color, size}: TabIconProps) => <MaterialIcons name={name} size={size} color={color} />;
+}
+
+function VendorTabs() {
+  return (
+    <VendorTab.Navigator screenOptions={{headerShown: false}}>
+      <VendorTab.Screen
+        name="Dashboard"
+        component={VendorDashboardScreen}
+        options={{tabBarIcon: renderDrawerIcon('dashboard')}}
+      />
+      <VendorTab.Screen
+        name="Bookings"
+        component={VendorBookingsScreen}
+        options={{tabBarIcon: renderDrawerIcon('list-alt')}}
+      />
+      <VendorTab.Screen
+        name="Profile"
+        component={UserProfileScreen}
+        options={{tabBarIcon: renderProfileTabIcon}}
+      />
+    </VendorTab.Navigator>
+  );
 }
 
 function VendorDrawerContent(props: any) {
@@ -89,19 +113,24 @@ function VendorDrawerNavigator() {
         drawerActiveTintColor: '#0d6efd',
       }}>
       <VendorDrawer.Screen
-        name="Dashboard"
-        component={VendorDashboardScreen}
-        options={{drawerIcon: renderDrawerIcon('dashboard')}}
+        name="Vendor Home"
+        component={VendorTabs}
+        options={({route}) => {
+          const focusedRoute = getFocusedRouteNameFromRoute(route) ?? 'Dashboard';
+
+          return {
+            drawerIcon: renderDrawerIcon('dashboard'),
+            headerTitle: focusedRoute,
+          };
+        }}
       />
       <VendorDrawer.Screen
-        name="Bookings"
-        component={VendorBookingsScreen}
-        options={{drawerIcon: renderDrawerIcon('list-alt')}}
-      />
-      <VendorDrawer.Screen
-        name="Profile"
-        component={UserProfileScreen}
-        options={{drawerIcon: renderDrawerIcon('person')}}
+        name="Add Services"
+        component={VendorAddServicesScreen}
+        options={{
+          drawerIcon: renderDrawerIcon('add-business'),
+          headerTitle: 'Add Services',
+        }}
       />
     </VendorDrawer.Navigator>
   );
