@@ -12,16 +12,19 @@ import {useNavigation} from '@react-navigation/native';
 import {useAppSelector} from '../../store/hooks';
 import {httpClient} from '../../api/httpClient';
 
+type VendorApiItem = {
+  mobile: string;
+  name: string;
+  businessName: string;
+  location: string;
+  specialty: string;
+  services: string[];
+  timeSlots: string[];
+};
+
 type VendorSlotsApiResponse = {
-  vendor: {
-    mobile: string;
-    name: string;
-    businessName: string;
-    location: string;
-    specialty: string;
-    services: string[];
-    timeSlots: string[];
-  };
+  vendor?: VendorApiItem;
+  vendors?: VendorApiItem[];
 };
 
 type VendorCardData = {
@@ -52,24 +55,28 @@ export function VendorsScreen() {
           return;
         }
 
-        const {data} = await httpClient.get<VendorSlotsApiResponse>(
-          '/users/vendors/7000686128/slots',
-          {
-            headers: {
-              Authorization: `Bearer ${authToken}`,
-            },
+        const {data} = await httpClient.get<VendorSlotsApiResponse>('/vendors/slots', {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
           },
-        );
-        const apiVendor = data.vendor;
-        const mappedVendor: VendorCardData = {
+        });
+
+        const apiVendors = Array.isArray(data.vendors)
+          ? data.vendors
+          : data.vendor
+          ? [data.vendor]
+          : [];
+
+        const mappedVendors: VendorCardData[] = apiVendors.map(apiVendor => ({
           id: apiVendor.mobile,
           businessName: apiVendor.businessName?.trim() || apiVendor.name || 'Vendor',
           location: apiVendor.location || 'N/A',
           category: apiVendor.specialty?.trim() || 'Services',
           services: apiVendor.services ?? [],
           availableSlots: apiVendor.timeSlots ?? [],
-        };
-        setVendors([mappedVendor]);
+        }));
+
+        setVendors(mappedVendors);
       } catch (error) {
         console.log('Fetch vendor slots error:', error);
         Alert.alert('Error', 'Unable to fetch vendor slots right now.');
@@ -258,16 +265,16 @@ const styles = StyleSheet.create({
   slotWrap: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
+    justifyContent: 'space-between',
+    rowGap: 10,
   },
   slotBtn: {
     backgroundColor: '#EFF6FF',
     borderWidth: 1,
     borderColor: '#DBEAFE',
     borderRadius: 12,
-    paddingHorizontal: 14,
+    width: '31.5%',
     paddingVertical: 8,
-    minWidth: 70,
     alignItems: 'center',
   },
   slotBtnSelected: {
